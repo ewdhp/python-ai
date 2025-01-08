@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 from sklearn.metrics.pairwise import cosine_similarity
