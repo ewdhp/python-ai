@@ -1,29 +1,3 @@
-"""
-The current implementation in your code is a basic Recurrent Neural Network (RNN) 
-with a single hidden layer using the tanh activation function. This type of RNN 
-is often referred to as a "Vanilla RNN" or "Simple RNN."
-
-
-Key Characteristics of the Current Implementation:
-
-- Single Hidden Layer: The RNN has one hidden layer.
-- Tanh Activation Function: The tanh function is used as the activation function 
-for the hidden layer.
-- Backpropagation Through Time (BPTT): The gradients are calculated using BPTT.
-- Gradient Clipping: Gradients are clipped to prevent exploding gradients.
-
-
-Summary:
-
-Name: Vanilla RNN or Simple RNN
-Activation Function: Tanh
-Training Method: Backpropagation Through Time (BPTT)
-Gradient Handling: Gradient Clipping
-This type of RNN is suitable for learning short-term dependencies in sequences 
-but may struggle with long-term dependencies due to issues like vanishing and 
-exploding gradients. For more complex tasks, architectures like Long Short-Term 
-Memory (LSTM) or Gated Recurrent Unit (GRU) are often used.
-"""
 import numpy as np
 
 # Tokenize the text into words
