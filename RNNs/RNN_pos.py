@@ -1,9 +1,10 @@
+import time
 import numpy as np
+from itertools import permutations
 
 # Tokenize the text into words
 def tokenize(text):
     return text.split()
-
 # Forward pass through the RNN over multiple time steps
 def forward_pass(x_seq, h_prev):
     h_states = []  # To store hidden states
@@ -18,12 +19,10 @@ def forward_pass(x_seq, h_prev):
         h_states.append(h_current)
 
     return y_hat_seq, h_states
-
 # Loss calculation using Mean Squared Error (MSE)
 def calculate_loss(y_hat_seq, y_true_seq):
     loss = np.mean([np.mean((y_hat - y_true) ** 2) for y_hat, y_true in zip(y_hat_seq, y_true_seq)])
     return loss
-
 # BPTT implementation
 def bptt(x_seq, y_true_seq, h_states, y_hat_seq):
     dWxh, dWhh, dWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
@@ -45,17 +44,14 @@ def bptt(x_seq, y_true_seq, h_states, y_hat_seq):
         dh_next = np.dot(Whh.T, dhraw)
 
     return dWxh, dWhh, dWhy, dbh, dby
-
 # Gradient clipping
 def clip_gradients(gradients, max_value):
     for grad in gradients:
         np.clip(grad, -max_value, max_value, out=grad)
-
 # SGD update
 def sgd_update(params, grad_params, learning_rate):
     for param, grad in zip(params, grad_params):
         param -= learning_rate * grad
-
 # Function to predict the next n words given an initial input
 def predict_next_n_words(input_sequence, n):
     h_prev = np.zeros((hidden_size, 1))
@@ -75,25 +71,22 @@ def predict_next_n_words(input_sequence, n):
     
     return predicted_sequence
 
-# Forward pass for a single time step
 def forward_pass_single(x, h_prev):
     h_next = np.tanh(np.dot(Wxh, x) + np.dot(Whh, h_prev) + bh)
     y_hat = np.dot(Why, h_next) + by
     y_hat = np.exp(y_hat) / np.sum(np.exp(y_hat))
     return y_hat, h_next
+# Sample POS tagging for sentences (this should be replaced with a real POS tagger in production)
+def pos_tagging(sentence):
+    # This is a mock POS tagger for demonstration purposes
+    pos_tags = {
+        "I": "PRP", "love": "VB", "running": "VBG", "fast": "RB",  # Example of POS tags
+        "She": "PRP", "enjoys": "VB", "reading": "VBG", "books": "NNS",
+        "They": "PRP", "are": "VBP", "studying": "VBG", "hard": "RB"
+    }
+    return [pos_tags.get(word, "NN") for word in sentence.split()]
 
-# Function to create training data using sliding window approach
-def create_training_data(text, window_size):
-    X_train = []
-    Y_train = []
-    for i in range(len(text) - window_size):
-        input_seq = text[i:i + window_size]
-        target_seq = text[i + 1:i + window_size + 1]
-        X_train.append([word_to_ix[word] for word in input_seq])
-        Y_train.append([word_to_ix[word] for word in target_seq])
-    return X_train, Y_train
-
-# Convert sequences to one-hot encoded vectors
+# Convert sequences to one-hot encoded matrices
 def one_hot_encode(sequences, vocab_size):
     one_hot_encoded = []
     for seq in sequences:
@@ -103,42 +96,49 @@ def one_hot_encode(sequences, vocab_size):
         one_hot_encoded.append(one_hot_seq)
     return one_hot_encoded
 
-# Vowel sequence expanded with a clear pattern
+# Convert POS tags to one-hot encoded matrices
+def one_hot_encode_pos(tags, pos_vocab_size):
+    one_hot_encoded = []
+    for tag in tags:
+        one_hot_tag = np.zeros((pos_vocab_size, 1))
+        tag_idx = pos_tag_to_ix.get(tag, 0)  # default to index 0 if tag is unknown
+        one_hot_tag[tag_idx, 0] = 1
+        one_hot_encoded.append(one_hot_tag)
+    return one_hot_encoded
+
+start_time = time.time()
+
+# Example sentences and their POS tags
 sentences = [
-    "when you do your homework", 
-    "everything is fine", 
-    "which are the best books to read?",  
-    "how are you doing", 
-    "the desert is hot",
-    "we do what we do",
-    "do you know what to do",
-    "you do what you do",
-    "i do what i do",
-    "we do what we do best"
+    "I love running fast",
+    "She enjoys reading books",
+    "They are studying hard"
 ]
 
-# Test the model by predicting a sequence of words starting from 'which are'
-strn_sentence = "when you"
-strn = tokenize(strn_sentence)
-n = 10
+# Tokenize the text into words and generate POS tags
+words = [tokenize(sentence) for sentence in sentences]
+pos_tags = [pos_tagging(sentence) for sentence in sentences]
 
-# Tokenize the text into words
-data = ' '.join(sentences)
-words = tokenize(data)
-unique_words = set(words)
+# Build vocabularies for words and POS tags
+unique_words = set(word for sentence in words for word in sentence)
+unique_pos_tags = set(tag for sentence in pos_tags for tag in sentence)
+
 vocab_size = len(unique_words)
+pos_vocab_size = len(unique_pos_tags)
 
-# Create a mapping from word to index and vice versa
+# Create mappings from word and POS tag to index, and vice versa
 word_to_ix = {word: i for i, word in enumerate(unique_words)}
 ix_to_word = {i: word for i, word in enumerate(unique_words)}
 
+pos_tag_to_ix = {tag: i for i, tag in enumerate(unique_pos_tags)}
+ix_to_pos_tag = {i: tag for i, tag in enumerate(unique_pos_tags)}
+
 # Number of input, hidden, and output nodes
-input_size = vocab_size
-hidden_size = 200  # Increased hidden size
-output_size = vocab_size
+hidden_size = 50  # Increased hidden size
+output_size = vocab_size  # Predict next word (output_size is vocab_size)
 
 # Initialization of weights
-Wxh = np.random.randn(hidden_size, input_size) * 0.01
+Wxh = np.random.randn(hidden_size, vocab_size + pos_vocab_size) * 0.01
 Whh = np.random.randn(hidden_size, hidden_size) * 0.01
 Why = np.random.randn(output_size, hidden_size) * 0.01
 
@@ -147,17 +147,39 @@ bh = np.zeros((hidden_size, 1))
 by = np.zeros((output_size, 1))
 
 # Hyperparameters
-learning_rate = 0.005  # Learning rate
-num_epochs = 100
-window_size = 40  # Increased sliding window size
-max_grad_value = 1  # Gradient clipping threshold
+learning_rate = 0.005
+num_epochs = 50
+window_size = 9
+max_grad_value = 1
 
-# Prepare training data using sliding window approach
-X_train, Y_train = create_training_data(words, window_size)
+# Create the X and Y matrices directly from sentences
+X_train = []
+Y_train = []
 
-# Convert training data to one-hot encoded vectors
-X_train = one_hot_encode(X_train, vocab_size)
-Y_train = one_hot_encode(Y_train, vocab_size)
+# Generate X and Y with words and their corresponding POS tags
+for sentence, pos_tag_sequence in zip(words, pos_tags):
+    for i in range(len(sentence) - 1):  # Use all but the last word
+        word = sentence[i]
+        next_word = sentence[i + 1]
+        pos_tag = pos_tag_sequence[i]
+        next_pos_tag = pos_tag_sequence[i + 1]
+        
+        # Create the input (word + POS tag one-hot)
+        x_word = word_to_ix[word]
+        x_pos_tag = pos_tag_to_ix[pos_tag]
+        x = np.concatenate((np.eye(vocab_size)[x_word], np.eye(pos_vocab_size)[x_pos_tag]), axis=0).reshape(-1, 1)
+        
+        # Create the output (next word one-hot)
+        y_word = word_to_ix[next_word]
+        y = np.eye(vocab_size)[y_word].reshape(-1, 1)
+        
+        # Append to the training data
+        X_train.append(x)
+        Y_train.append(y)
+
+# Convert to numpy arrays for further processing
+X_train = np.array(X_train)
+Y_train = np.array(Y_train)
 
 # Training loop
 for epoch in range(num_epochs):
@@ -181,10 +203,18 @@ for epoch in range(num_epochs):
     sgd_update(params, grad_params, learning_rate)
 
     if epoch % 100 == 0:
-        print(f'Epoch {epoch + 1}, Loss: {loss:.4f}, Gradients: dWxh: {np.linalg.norm(dWxh):.4f}, dWhh: {np.linalg.norm(dWhh):.4f}, dWhy: {np.linalg.norm(dWhy):.4f}, dbh: {np.linalg.norm(dbh):.4f}, dby: {np.linalg.norm(dby):.4f}')
+        print(f'Epoch {epoch + 1}, Loss: {loss:.4f}')
 
-# Print the final epoch's loss and gradients
-print(f'Epoch {num_epochs}, Loss: {loss:.4f}, Gradients: dWxh: {np.linalg.norm(dWxh):.4f}, dWhh: {np.linalg.norm(dWhh):.4f}, dWhy: {np.linalg.norm(dWhy):.4f}, dbh: {np.linalg.norm(dbh):.4f}, dby: {np.linalg.norm(dby):.4f}')
+end_time = time.time()
 
-predicted_sequence = predict_next_n_words(strn, n)
-print(f'Predicted sequence: {" ".join(predicted_sequence)}')
+print(f'Training time: {end_time - start_time:.2f} seconds')
+
+# Print the final epoch's loss
+print(f'Epoch {num_epochs}, Loss: {loss:.4f}')
+
+# Print the POS-tagged words for each sentence
+for sentence, pos_tag_sequence in zip(sentences, pos_tags):
+    word_pos_tag_pairs = list(zip(sentence.split(), pos_tag_sequence))
+    print("Sentence:", sentence)
+    print("POS Tagged:", word_pos_tag_pairs)
+    print()

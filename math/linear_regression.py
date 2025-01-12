@@ -1,4 +1,13 @@
 import numpy as np
+import time
+import matplotlib.pyplot as plt
+
+# Using the model to make predictions
+def predict(X):
+    return m * X + b
+
+# Start the timer
+start_time = time.time()
 
 # Sample data
 X = np.array([1, 2, 3, 4, 5])
@@ -16,23 +25,21 @@ m = numerator / denominator
 # Step 3: Calculate the intercept (b)
 b = y_mean - m * X_mean
 
-print(f"Calculated slope (m): {m}")
-print(f"Calculated intercept (b): {b}")
 
-# Using the model to make predictions
-def predict(X):
-    return m * X + b
+
+
 
 X_new = 6
 y_pred = predict(X_new)
+
+
+# Stop the timer and calculate the elapsed time
+end_time = time.time()
+elapsed_time = (end_time - start_time) * 1000  
+
+print(f"Calculated slope (m): {m}")
+print(f"Calculated intercept (b): {b}")
 print(f"Predicted value for X_new = 6: {y_pred}")
+print(f"Elapsed time: {elapsed_time:.2f} ms")
 
-# Optional: Plotting the data and the linear model
-import matplotlib.pyplot as plt
 
-plt.scatter(X, y, color='blue', label='Data points')
-plt.plot(X, predict(X), color='red', label='Linear model')
-plt.xlabel('X')
-plt.ylabel('y')
-plt.legend()
-plt.show()
