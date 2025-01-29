@@ -5,69 +5,38 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import cosine, euclidean
 from fastdtw import fastdtw  # Install with 'pip install fastdtw'
 
+# Example data
+signal = [1.00, 1.3456789, 3.4567890]
+pattern = [2, 1.3456789, 2.4567889]
 
-# Original signal (size 100)
-signal = np.random.randint(0, 9, 100)
+# Convert signal to a NumPy array
+signal = np.array(signal)  # Keep it as a 1D array
+pattern = np.array(pattern)  # Ensure pattern is also 1D
 
-# New signal (size 10)
-new_signal = [2, 6, 0, 7, 1, 3, 5, 8, 4, 6]
-
-# Combine the two signals
-signal = np.concatenate((signal, new_signal))
-
-pattern = np.array([1, 2])  # Pattern to detect
 window_size = len(pattern)
 
 # Threshold for match detection
-threshold = 0.50  # Can be adjusted
+threshold = 0.90 # Can be adjusted
 
-# Debug: Print the generated signal
-print(f"Signal with key-value pairs:")
-for idx, val in enumerate(signal):
-    print(f"Index {idx}: {val}")
-
-# Step 1: Apply KMeans clustering
-kmeans = KMeans(n_clusters=3)
-signal_reshaped = signal.reshape(-1, 1)  # Reshape for KMeans
-kmeans.fit(signal_reshaped)
-labels = kmeans.predict(signal_reshaped)
-
-# Cluster Summary
-cluster_summary = {}
-for label in np.unique(labels):
-    cluster_points = signal[labels == label]
-    cluster_summary[label] = {
-        "count": len(cluster_points),
-        "range": (min(cluster_points), max(cluster_points))
-    }
-
-print("\nCluster Summary:")
-for label, summary in cluster_summary.items():
-    print(f"Cluster {label}: {summary['count']} points, Value Range: {summary['range']}")
-
-# Step 2: Detect anomalies within each cluster using Isolation Forest
-iso_forest = IsolationForest(contamination=0.1)  # 10% contamination for anomalies
-anomalies = iso_forest.fit_predict(signal_reshaped)
-
-# Anomaly Summary
-anomalies_indices = [i for i, a in enumerate(anomalies) if a == -1]
-print(f"\nAnomaly Summary:")
-print(f"Total anomalies: {len(anomalies_indices)}")
-print(f"Anomaly indices: {anomalies_indices}")
-print(f"Anomalous values: {[signal[i] for i in anomalies_indices]}")
-
-# Function for detecting patterns using different similarity metrics
+# Function for detecting patterns using different similarity metrics (set-based matching)
 def detect_pattern(signal, pattern, threshold, similarity_metric):
     matches = []
+    pattern_set = set(pattern)  # Convert the pattern to a set for flexible matching
+    
     for i in range(len(signal) - window_size + 1):
         window = signal[i:i + window_size]
         
-        # Skip anomalies
-        if anomalies[i] == -1:
-            continue
+        # Skip anomalies (if you implement anomaly detection, this would be relevant)
+        # if anomalies[i] == -1:
+        #     continue
         
-        # Calculate similarity based on chosen metric
-        if similarity_metric == 'cosine':
+        window_set = set(window)  # Convert the window to a set for flexible matching
+        
+        # Calculate similarity based on set intersection
+        if similarity_metric == 'set':
+            intersection = len(pattern_set.intersection(window_set))  # Count the number of matching elements
+            similarity = intersection / len(pattern_set)  # Normalize by the length of the pattern set
+        elif similarity_metric == 'cosine':
             similarity = 1 - cosine(window, pattern)
         elif similarity_metric == 'euclidean':
             similarity = 1 / (1 + euclidean(window, pattern))  # Inverse of distance to get similarity
@@ -79,20 +48,24 @@ def detect_pattern(signal, pattern, threshold, similarity_metric):
         
         # Compare similarity to threshold
         if similarity > threshold:
-            matches.append((i, labels[i], similarity))  # Record index, cluster label, and similarity
+            matches.append((i, similarity))  # Record index and similarity
     
     return matches
 
-# Detect patterns using different metrics
-metrics = ['cosine', 'euclidean', 'dtw']
+# Detect patterns using set-based similarity (order doesn't matter)
+metrics = ['set', 'cosine', 'euclidean', 'dtw']
 for metric in metrics:
     matches = detect_pattern(signal, pattern, threshold, metric)
     
     # Output results for each metric
-    print(f"\nPattern detected using {metric} similarity at positions (with cluster labels): {matches}")
-
-    # Optionally, you can display similarity scores as well for further analysis
+    print(f"\nPattern detected using {metric} similarity at positions:\n")
+    
+    # Formatting the output as a matrix-like table
     if matches:
-        print(f"Summary of matches for {metric}:")
+        print(f"{'Position':<10}{'Similarity':<15}")
+        print("-" * 25)
         for match in matches:
-            print(f"Position {match[0]}, Cluster {match[1]}, Similarity: {match[2]:.2f}")
+            print(f"{match[0]:<10}{match[1]:<15.2f}")
+        print("\n")
+    else:
+        print(f"No matches found using {metric} similarity.\n")
