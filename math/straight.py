@@ -41,9 +41,8 @@ def compare(signal, window_size, ai, threshold=90):
     return matches, pattern_found, matched_positions
 
 # Function to summarize matches and print a summary
-def run(window_size, ai, threshold=90, n=10):
+def run(window_size, ai, threshold=90, n=10, total_data_size=100):
     total_matches = 0
-    total_data_size = 1000  # Set a fixed data size for clarity
     matched_patterns_percent = 0
     unique_matched_positions = set()  # To track unique positions across all runs
 
@@ -85,7 +84,8 @@ def run(window_size, ai, threshold=90, n=10):
     print(f"Total number of unique matched patterns: {total_matches}")
     print(f"Matched patterns as percentage of data: {matched_patterns_percent:.2f}%")
     print(f"Total data size: {total_data_size}")
+    print(f"Indices of matched patterns: {sorted(unique_matched_positions)}")
 
-ai = np.array([1, 0, 3])
+ai = np.array([0,5,3,7,9])
 window_size = len(ai)
-run(window_size, ai, threshold=90, n=3)
+run(window_size, ai, threshold=90, n=3, total_data_size=1000)
