@@ -6,10 +6,10 @@ def generate_random_data_int(size, low=0, high=10):
     return np.random.randint(low, high, size)  # Generates random integers between low and high (inclusive)
 
 # Function to compare permutations of ai to windows in the signal
-def compare_window_to_signal(signal, window_size, ai, threshold=90):
+def compare(signal, window_size, ai, threshold=90):
     matches = []  # To store positions where pattern matches
     pattern_found = False  # To track if a match is found
-    matched_positions = {}  # To store matched positions with percentages
+    matched_positions = set()  # Use set to store unique matched positions
     
     # Generate all permutations of the pattern ai
     window_permutations = list(permutations(ai))
@@ -34,34 +34,58 @@ def compare_window_to_signal(signal, window_size, ai, threshold=90):
             if match_percentage >= threshold:
                 matches.append((i, perm, match_percentage))
                 pattern_found = True
-                # Store the matched position and percentage in the dictionary
-                matched_positions[i] = match_percentage
+                # Add the matched position to the set
+                matched_positions.add(i)
     
     # Return matches, whether a pattern was found, and the matched positions
     return matches, pattern_found, matched_positions
 
+# Function to summarize matches and print a summary
+def run(window_size, ai, threshold=90, n=10):
+    total_matches = 0
+    total_data_size = 1000  # Set a fixed data size for clarity
+    matched_patterns_percent = 0
+    unique_matched_positions = set()  # To track unique positions across all runs
 
-# Predefined pattern ai (e.g., a small template or reference pattern)
-ai = np.array([0,1,2,3])
-window_size = len(ai)
+    # Loop for n comparisons
+    for run in range(n):
+        print(f"Run {run + 1}:")
+        
+        # Regenerate the signal for each run to ensure randomness
+        signal = generate_random_data_int(total_data_size)
+        
+        # Print the generated signal for debugging purposes
+        #print(f"Generated Signal: {signal[:30]} ...")  # Only print the first 30 elements to avoid too much output
+        
+        # Perform the comparison with the generated signal
+        matches, pattern, matched = compare(signal, window_size, ai, threshold)
 
-# Generate a random data array (size 15 for example)
-signal = generate_random_data_int(100)
-print(f"Random Data:\n {signal} \n")
+        # Print results for this run
+        if pattern:
+            #print(f"Pattern found in the following windows (Total matches: {len(matches)}):")
+            for match in matches:
+                index, perm, percentage = match
+                #print(f"At position {index}, permutation {perm} has {percentage:.2f}% match")
+            
+            # Add the matched positions to the global set (unique matches across all runs)
+            unique_matched_positions.update(matched)
+        else:
+            print("No pattern found.")
 
-# Call the function and detect patterns
-matches, pattern_found, matched_positions = compare_window_to_signal(signal, window_size, ai)
-
-# Output results
-if pattern_found:
-    print("Pattern found in the following windows:")
-    for match in matches:
-        index, perm, percentage = match
-        print(f"At position {index}, permutation {perm} has {percentage:.2f}% match")
     
-    # Output matched positions and percentages
-    print("\nMatched Positions and Percentages:")
-    for pos, percentage in matched_positions.items():
-        print(f"Position {pos} has {percentage:.2f}% match")
-else:
-    print("No pattern found.")
+    # Calculate total number of unique matched positions
+    total_matches = len(unique_matched_positions)
+    
+    # Calculate percentage of matches relative to the total data size
+    if total_data_size > 0:
+        matched_patterns_percent = (total_matches / total_data_size) * 100
+    
+    # Print final summary
+    print("\nSummary of All Runs:")
+    print(f"Total number of unique matched patterns: {total_matches}")
+    print(f"Matched patterns as percentage of data: {matched_patterns_percent:.2f}%")
+    print(f"Total data size: {total_data_size}")
+
+ai = np.array([1, 0, 3])
+window_size = len(ai)
+run(window_size, ai, threshold=90, n=3)
