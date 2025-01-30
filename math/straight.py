@@ -9,7 +9,7 @@ def generate_random_data_int(size, low=0, high=10):
 def compare(signal, window_size, ai, threshold=90):
     matches = []  # To store positions where pattern matches
     pattern_found = False  # To track if a match is found
-    matched_positions = set()  # Use set to store unique matched positions
+    matched_positions = {}  # Use dictionary to store unique matched positions and their sequences
     
     # Generate all permutations of the pattern ai
     window_permutations = list(permutations(ai))
@@ -34,42 +34,40 @@ def compare(signal, window_size, ai, threshold=90):
             if match_percentage >= threshold:
                 matches.append((i, perm, match_percentage))
                 pattern_found = True
-                # Add the matched position to the set
-                matched_positions.add(i)
+                # Add the matched position and sequence to the dictionary
+                matched_positions[i] = window
     
-    # Return matches, whether a pattern was found, and the matched positions
+    # Return matches, whether a pattern was found, and the matched positions with sequences
     return matches, pattern_found, matched_positions
 
 # Function to summarize matches and print a summary
-def run(window_size, ai, threshold=90, n=10, total_data_size=100):
+def run(window_size, ai, threshold, n, total_data_size):
     total_matches = 0
     matched_patterns_percent = 0
-    unique_matched_positions = set()  # To track unique positions across all runs
+    unique_matched_positions = {}  # To track unique positions and sequences across all runs
 
     # Loop for n comparisons
-    for run in range(n):
-        print(f"Run {run + 1}:")
-        
+    for run in range(n):       
         # Regenerate the signal for each run to ensure randomness
         signal = generate_random_data_int(total_data_size)
-        
-        # Print the generated signal for debugging purposes
-        #print(f"Generated Signal: {signal[:30]} ...")  # Only print the first 30 elements to avoid too much output
-        
         # Perform the comparison with the generated signal
         matches, pattern, matched = compare(signal, window_size, ai, threshold)
 
         # Print results for this run
         if pattern:
-            #print(f"Pattern found in the following windows (Total matches: {len(matches)}):")
+            print(f"Run: {run + 1}, Total matches: {len(matches)}, Matched pattern indices: {list(matched.keys())}:")
             for match in matches:
                 index, perm, percentage = match
                 #print(f"At position {index}, permutation {perm} has {percentage:.2f}% match")
+                # Print the sequence starting at the matched index
+                sequence = signal[index:index + window_size]
+                #print(f"Sequence starting at index {index}: {sequence}")
             
-            # Add the matched positions to the global set (unique matches across all runs)
+            # Add the matched positions and sequences to the global dictionary (unique matches across all runs)
             unique_matched_positions.update(matched)
         else:
-            print("No pattern found.")
+            print(f"Run: {run + 1}, No pattern found.")
+
 
     
     # Calculate total number of unique matched positions
@@ -84,8 +82,17 @@ def run(window_size, ai, threshold=90, n=10, total_data_size=100):
     print(f"Total number of unique matched patterns: {total_matches}")
     print(f"Matched patterns as percentage of data: {matched_patterns_percent:.2f}%")
     print(f"Total data size: {total_data_size}")
-    print(f"Indices of matched patterns: {sorted(unique_matched_positions)}")
+    print(f"Indices of matched patterns: {sorted(unique_matched_positions.keys())}")
+    
+    # Print the sequences starting from each matched index
+    for index in sorted(unique_matched_positions.keys()):
+        sequence = unique_matched_positions[index]
+        print(f"Sequence starting at index {index}: {sequence}")
 
-ai = np.array([0,5,3,7,9])
+print("\n")
+n = 10
+threshold = 100
+total_data_size = 100
+ai = np.array([1, 2, 3])
 window_size = len(ai)
-run(window_size, ai, threshold=90, n=3, total_data_size=1000)
+run(window_size, ai, threshold, n, total_data_size)
