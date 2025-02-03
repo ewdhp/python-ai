@@ -37,6 +37,7 @@ def compare(signal, window_size, ai, threshold=90):
             pattern_found = True
             # Add the matched position and sequence to the dictionary
             matched_positions[i] = signal[i:i + window_size]
+            print(f"Match found at index {i}: {signal[i:i + window_size]}")  # Debug print
     
     # Return matches, whether a pattern was found, and the matched positions with sequences
     return matches, pattern_found, matched_positions
@@ -102,7 +103,7 @@ def preprocess_sequence(sequence):
 
 # Function to check if a sequence is a geometric progression
 def is_geometric_progression(sequence):
-    if len(sequence) < 2:
+    if len(sequence) < 3:
         return False
     ratio = sequence[1] / sequence[0] if sequence[0] != 0 else 0
     print(f"Checking geometric progression for sequence: {sequence}, ratio: {ratio}")  # Debug print
@@ -113,7 +114,7 @@ def is_geometric_progression(sequence):
 
 # Function to check if a sequence is a power series
 def is_power_series(sequence):
-    if len(sequence) < 2:
+    if len(sequence) < 3:
         return False
     base = sequence[1] / sequence[0] if sequence[0] != 0 else 0
     print(f"Checking power series for sequence: {sequence}, base: {base}")  # Debug print
@@ -153,7 +154,7 @@ print("\n")
 n = 1
 threshold = 100
 total_data_size = 100
-ai = np.array([1,2 ])
+ai = np.array([1, 2, 4])
 window_size = len(ai)
 run(window_size, ai, threshold, n, total_data_size)
 print("\n")
