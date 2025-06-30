@@ -148,6 +148,7 @@ while True:
             print(f"- Matches in {100_000:,} trials: {matches}")
             print(f"- Estimated probability of drawing: {probability:.4%}\n")
             print(f"Time elapsed: {elapsed:.2f} seconds")
+            user_permutations = []  # <-- Reset after summary
 
     if not user_permutations:
         print("No permutations entered. Exiting.")
