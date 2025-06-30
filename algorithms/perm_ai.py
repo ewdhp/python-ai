@@ -3,8 +3,9 @@ from collections import Counter
 from itertools import permutations as it_permutations
 import time
 import os
+import fractions
 
-def simulate_draws(dataset, target_permutations, trials=100_000):
+def simulate_draws(dataset, target_permutations, trials=100):
     """
     Simulate random draws from the dataset and count how many times
     a draw matches any of the target permutations.
@@ -21,7 +22,7 @@ def simulate_draws(dataset, target_permutations, trials=100_000):
     probability = counts["matched"] / trials
     return counts["matched"], probability  # <-- Return both values
 
-def draw_percentages(dataset, draws=100_000, k=1):
+def draw_percentages(dataset, draws=100, k=1):
     """
     Simulate random draws from the dataset and return the 
     percentage of times each number is drawn.
@@ -90,7 +91,25 @@ def select_permutations(numbers, custom_permutations=None, length=None):
         length = len(numbers)
     return generate_permutations(numbers, length)
 
-# Load dataset from file if available, else use default
+def format_probability_fraction(prob, perm, probs):
+    # Compute the probability for a single permutation as a fraction
+    p = 1
+    for num in perm:
+        p *= probs.get(num, 0)
+    if p > 0:
+        frac = fractions.Fraction(p).limit_denominator()
+        return f"{frac.numerator}/{frac.denominator}", p * 100
+    return "-", 0
+
+def print_permutation_table(permutations, probs):
+    print("\nPermutation | Theoretical Probability (fraction) | Theoretical Probability (%)")
+    print("-" * 65)
+    for perm in permutations:
+        frac, pct = format_probability_fraction(None, perm, probs)
+        perm_str = ",".join(str(x) for x in perm)
+        print(f"{perm_str:<11} | {frac:^33} | {pct:>8.4f}%")
+    print("-" * 65)
+
 dataset_file = "dataset.txt"
 if os.path.exists(dataset_file):
     d = {}
@@ -105,18 +124,20 @@ if os.path.exists(dataset_file):
                 except ValueError:
                     continue
 else:
+
     d = {
         1: 25, 
-        2: 25,
-        3: 25,
-        4: 25,
+        2: 70,
+        3: 5,
     }
 
-dataset_list, probs = create_dataset(d, total=sum(d.values()), return_probs=True)
-
+dataset_list, probs = create_dataset(
+d, total=sum(d.values()), 
+return_probs=True)
 while True:
-    print("\nEnter permutations as comma-separated numbers (e.g. 1,2,3), one per line.")
-    print("Press Enter on an empty line to finish and see the summary, or type 'q' or 'exit' to quit.\n")
+    print("\nEnter permutations as comma-separated numbers.")
+    print("Press Enter on an empty line to finish" + 
+        ", or type 'q' or 'exit' to quit.\n")
     user_permutations = []
     while True:
         inp = input("Permutation: ").strip()
@@ -128,52 +149,33 @@ while True:
         try:
             perms = inp.split()
             for perm_str in perms:
-                perm = tuple(int(x.strip()) for x in perm_str.split(",") if x.strip())
+                perm = tuple(
+                    int(x.strip()) 
+                    for x in perm_str.split(",") 
+                    if x.strip())
                 if perm:  # Only add non-empty permutations
                     user_permutations.append(perm)
         except Exception:
             print("Invalid input, try again.")
 
-        # Print summary after each user prompt (if at least one permutation entered)
+        # Print summary after each user prompt 
+        # (if at least one permutation entered)
         if user_permutations:
             start_time = time.time()
             k = len(user_permutations[0])
             p = select_permutations(d.keys(), user_permutations, length=k)
-            theoretical_prob = theoretical_probability(p, probs)
-            percentages = draw_percentages(dataset_list, draws=100_000, k=k)
+            theoretical_prob = theoretical_probability(p, probs)       
+            percentages = draw_percentages(dataset_list, draws=100, k=k)                       
             matches, probability = simulate_draws(dataset_list, p)
-            elapsed = time.time() - start_time
-            print(f"\nTheoretical probability: {theoretical_prob:.4%}\n")
+            elapsed = time.time() - start_time    
+            print_permutation_table(p, probs)
+            print(f"\n- Theoretical probability: {theoretical_prob:.4%}")
             print(f"- Total permutations: {len(p)}")
             print(f"- Matches in {100_000:,} trials: {matches}")
             print(f"- Estimated probability of drawing: {probability:.4%}\n")
-            print(f"Time elapsed: {elapsed:.2f} seconds")
+            print(f"Time elapsed: {elapsed:.2f} seconds\n")
             user_permutations = []  # <-- Reset after summary
 
     if not user_permutations:
         print("No permutations entered. Exiting.")
         break
-
-    start_time = time.time()
-
-    k = len(user_permutations[0])
-    p = select_permutations(d.keys(), user_permutations, length=k)
-
-    theoretical_prob = theoretical_probability(p, probs)
-    percentages = draw_percentages(dataset_list, draws=100_000, k=k)
-    matches, probability = simulate_draws(dataset_list, p)
-
-    elapsed = time.time() - start_time
-
-    print(f"\nTheoretical probability: {theoretical_prob:.4%}\n")
-    print(f"- Total permutations: {len(p)}")
-    print(f"- Matches in {100_000:,} trials: {matches}")
-    print(f"- Estimated probability of drawing: {probability:.4%}\n")
-    print(f"Time elapsed: {elapsed:.2f} seconds")
-    elapsed = time.time() - start_time
-
-    print(f"\nTheoretical probability: {theoretical_prob:.4%}\n")
-    print(f"- Total permutations: {len(p)}")
-    print(f"- Matches in {100_000:,} trials: {matches}")
-    print(f"- Estimated probability of drawing: {probability:.4%}\n")
-    print(f"Time elapsed: {elapsed:.2f} seconds")
