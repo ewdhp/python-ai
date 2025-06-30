@@ -36,7 +36,7 @@ def draw_percentages(dataset, draws=100, k=1):
     percentages = {num: (count / total_draws) * 100 for num, count in counts.items()}
     return percentages  # <-- Only return percentages
 
-def create_dataset(percentages, total=None, return_probs=False):
+def create_dataset(percentages, total=None, return_probs=True):
     """
     Create a dataset list from a {number: percentage} dictionary.
     If total is None, use the sum of all values in percentages as the total.
@@ -126,14 +126,12 @@ if os.path.exists(dataset_file):
 else:
 
     d = {
-        1: 25, 
-        2: 70,
-        3: 5,
+        1: 50, 
+        2: 50,
     }
 
-dataset_list, probs = create_dataset(
-d, total=sum(d.values()), 
-return_probs=True)
+dataset, probs = create_dataset(d, total=sum(d.values()))
+
 while True:
     print("\nEnter permutations as comma-separated numbers.")
     print("Press Enter on an empty line to finish" + 
@@ -165,8 +163,8 @@ while True:
             k = len(user_permutations[0])
             p = select_permutations(d.keys(), user_permutations, length=k)
             theoretical_prob = theoretical_probability(p, probs)       
-            percentages = draw_percentages(dataset_list, draws=100, k=k)                       
-            matches, probability = simulate_draws(dataset_list, p)
+            percentages = draw_percentages(dataset, draws=100, k=k)                       
+            matches, probability = simulate_draws(dataset, p)
             elapsed = time.time() - start_time    
             print_permutation_table(p, probs)
             print(f"\n- Theoretical probability: {theoretical_prob:.4%}")
