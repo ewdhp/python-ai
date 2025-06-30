@@ -126,12 +126,11 @@ while True:
         if not inp:
             break
         try:
-            # Support both comma and space separated input for multiple permutations
-            # e.g. "1,2 2,1" or "1,2,3"
             perms = inp.split()
             for perm_str in perms:
-                perm = tuple(int(x.strip()) for x in perm_str.split(","))
-                user_permutations.append(perm)
+                perm = tuple(int(x.strip()) for x in perm_str.split(",") if x.strip())
+                if perm:  # Only add non-empty permutations
+                    user_permutations.append(perm)
         except Exception:
             print("Invalid input, try again.")
 
@@ -177,5 +176,3 @@ while True:
     print(f"- Matches in {100_000:,} trials: {matches}")
     print(f"- Estimated probability of drawing: {probability:.4%}\n")
     print(f"Time elapsed: {elapsed:.2f} seconds")
-
-
