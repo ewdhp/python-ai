@@ -58,12 +58,11 @@ def theoretical_probability(permutations, probs):
     return prob
 
 d = {
-1: 45, 
-2: 50, 
-3: 5
+    1: 50, 
+    2: 50, 
 }
 
-p = [(1, 2), (2, 1)]
+p = [(1,2), (2,1)]
 
 dataset_list, probs = create_dataset(d, total=1000, return_probs=True)
 percentages = draw_percentages(dataset_list, draws=100_000, k=1)
