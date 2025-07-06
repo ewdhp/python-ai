@@ -55,6 +55,25 @@ Interpretation:
 A low variance means the data points are close to the mean.
 A high variance means the data points are more spread out.
 
+In calculus, derivatives like 
+    
+    𝑑𝑦𝑑𝑥
+
+represent rates of change—how one variable changes in relation to another. 
+But here: dx means "the deviation of x from its mean", not an infinitesimally 
+small change. dy does the same for y. So this notation is from statistics, 
+not calculus.
+
+Where This Connects to Derivatives?
+There is an interesting bridge, though! 
+
+When you calculate things like:
+Slope of a regression line
+𝑚= ∑ 𝑑𝑥⋅𝑑𝑦 / ∑ 𝑑𝑥2
+
+You're essentially computing a kind of average rate of change based 
+on deviations—similar in spirit to a derivative, but using finite 
+differences instead of limits
 """
 import numpy as np
 import matplotlib.pyplot as plt
