@@ -67,39 +67,50 @@ not calculus.
 Where This Connects to Derivatives?
 There is an interesting bridge, though! 
 
-When you calculate things like:
-Slope of a regression line
-𝑚= ∑ 𝑑𝑥⋅𝑑𝑦 / ∑ 𝑑𝑥2
+When you calculate things like: Slope of a regression line
+
+    𝑚= ∑ 𝑑𝑥⋅𝑑𝑦 / ∑ 𝑑𝑥2
 
 You're essentially computing a kind of average rate of change based 
 on deviations—similar in spirit to a derivative, but using finite 
 differences instead of limits
+
+
+Once you’ve calculated the slope m and intercept b, 
+you can create the regression equation:
+
+    𝑦^= 𝑚 ⋅ 𝑥 + 𝑏
+
+Slope:
+𝑚= ∑(𝑥𝑖−𝑥ˉ)(𝑦𝑖−𝑦ˉ) / ∑(𝑥𝑖−𝑥ˉ)2
+
+intercept:
+𝑏= 𝑦ˉ− 𝑚 ⋅ 𝑥
+
+Where:
+
+- 𝑦^(y_pred) is the predicted value of y for a given x.
+- 𝑚 is the slope, showing how much y changes for each unit increase in x.
+- 𝑏 is the y-intercept, or the value of y when x = 0.
 """
 import numpy as np
 import matplotlib.pyplot as plt
 
 # 1. Data collection
 x = np.array([1, 2, 3, 4, 5])
-y = np.array([2, 4, 5, 4, 5])
+y = np.array([2, 4, 5, 4, 4])
 
 # 2. Calculate means
 x_mean = np.mean(x)
 y_mean = np.mean(y)
 print(f"Mean of x: {x_mean}")
 print(f"Mean of y: {y_mean}")
+plt.scatter([x_mean], [y_mean], color='orange', marker='x', s=100, label='Means (x̄, ȳ)')
 
 # 3. Calculate the slope (m) and intercept (b) manually
-print("\nTable for slope calculation:")
-print(f"{'x':>3} {'y':>3} {'x-x̄':>8} {'y-ȳ':>8} {'(x-x̄)*(y-ȳ)':>15} {'(x-x̄)^2':>10}")
-for xi, yi in zip(x, y):
-    dx = xi - x_mean
-    dy = yi - y_mean
-    prod = dx * dy
-    dx2 = dx ** 2
-    print(f"{xi:>3} {yi:>3} {dx:>8.2f} {dy:>8.2f} {prod:>15.2f} {dx2:>10.2f}")
-
 numerator = np.sum((x - x_mean) * (y - y_mean))
 denominator = np.sum((x - x_mean) ** 2)
+
 m = numerator / denominator
 b = y_mean - m * x_mean
 
@@ -111,14 +122,14 @@ y_pred = m * x + b
 print(f"Predicted y values: {y_pred}")
 
 # 5. Make a prediction for a new x value
-x_new = 6
+x_new = 7
 y_new = m * x_new + b
 print(f"Prediction for x={x_new}: y={y_new}")
 
 # 6. Visualize the result
 plt.scatter(x, y, color='blue', label='Data points')
 plt.plot(x, y_pred, color='red', label='Regression line')
-plt.scatter([x_new], [y_new], color='green', label=f'Prediction (x={x_new})')
+plt.scatter([x_new], [y_new], color='green', label=f'Prediction (x={x_new}) y={y_new:.2f}')
 plt.xlabel('x')
 plt.ylabel('y')
 plt.title('Step-by-step Linear Regression')
