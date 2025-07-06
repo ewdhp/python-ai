@@ -69,7 +69,7 @@ There is an interesting bridge, though!
 
 When you calculate things like: Slope of a regression line
 
-    𝑚= ∑ 𝑑𝑥⋅𝑑𝑦 / ∑ 𝑑𝑥2
+    𝑚= ∑ 𝑑𝑥⋅𝑑𝑦 / ∑ 𝑑𝑥**2
 
 You're essentially computing a kind of average rate of change based 
 on deviations—similar in spirit to a derivative, but using finite 
@@ -82,10 +82,10 @@ you can create the regression equation:
     𝑦^= 𝑚 ⋅ 𝑥 + 𝑏
 
 Slope:
-𝑚= ∑(𝑥𝑖−𝑥ˉ)(𝑦𝑖−𝑦ˉ) / ∑(𝑥𝑖−𝑥ˉ)2
+𝑚 = ∑( 𝑥𝑖 − 𝑥ˉ)( 𝑦𝑖 − 𝑦ˉ) / ∑( 𝑥𝑖 − 𝑥ˉ)**2
 
 intercept:
-𝑏= 𝑦ˉ− 𝑚 ⋅ 𝑥
+𝑏 = 𝑦ˉ− 𝑚 ⋅ 𝑥
 
 Where:
 
@@ -96,40 +96,40 @@ Where:
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 1. Data collection
-x = np.array([1, 2, 3, 4, 5])
-y = np.array([2, 4, 5, 4, 4])
+# 1. Data collection with a quadratic pattern
+x = np.array([1,  2, 3,  4, 5,  6,])
+y = np.array([3, -3, 4, -4, 5, -5,])
 
 # 2. Calculate means
 x_mean = np.mean(x)
 y_mean = np.mean(y)
-print(f"Mean of x: {x_mean}")
-print(f"Mean of y: {y_mean}")
-plt.scatter([x_mean], [y_mean], color='orange', marker='x', s=100, label='Means (x̄, ȳ)')
 
 # 3. Calculate the slope (m) and intercept (b) manually
 numerator = np.sum((x - x_mean) * (y - y_mean))
 denominator = np.sum((x - x_mean) ** 2)
-
 m = numerator / denominator
 b = y_mean - m * x_mean
 
-print(f"Slope (m): {m}")
-print(f"Intercept (b): {b}")
-
 # 4. Build the regression line
 y_pred = m * x + b
-print(f"Predicted y values: {y_pred}")
 
 # 5. Make a prediction for a new x value
 x_new = 7
 y_new = m * x_new + b
-print(f"Prediction for x={x_new}: y={y_new}")
+
+print(f"Slope (m): {m:.10f}")
+print(f"Intercept (b): {b:.10f}")
+print(f"Predicted y values: {[f'{val:.10f}' for val in y_pred]}")
+print(f"Prediction for x={x_new}: y={y_new:.10f}")
 
 # 6. Visualize the result
 plt.scatter(x, y, color='blue', label='Data points')
 plt.plot(x, y_pred, color='red', label='Regression line')
-plt.scatter([x_new], [y_new], color='green', label=f'Prediction (x={x_new}) y={y_new:.2f}')
+plt.scatter(
+    [x_new], [y_new], 
+    color='green', 
+    label=f'Prediction (x={x_new}) y={y_new:.2f}')
+
 plt.xlabel('x')
 plt.ylabel('y')
 plt.title('Step-by-step Linear Regression')
