@@ -96,9 +96,8 @@ Where:
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 1. Data collection with a quadratic pattern
 x = np.array([1,  2, 3,  4, 5,  6,])
-y = np.array([3, -3, 4, -4, 5, -5,])
+y = np.array([1,  2, 3,  4, 5,  6,])
 
 # 2. Calculate means
 x_mean = np.mean(x)
