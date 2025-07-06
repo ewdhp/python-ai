@@ -1,74 +1,50 @@
-import matplotlib.pyplot as plt
+"""
+Linear Regression and the Tangent
+
+Suppose you have a set of data points and you want to fit a straight line 
+(linear regression). The slope of the best-fit line is often denoted as "m". 
+If you interpret the slope as the tangent of an angle θ (i.e., m = tan(θ)), then:
+
+θ = arctan(m)
+
+This angle θ represents the inclination of the regression line 
+with respect to the x-axis.
+
+Steps in the Process
+
+Collect Data: Gather pairs of (x, y) data points.
+Fit a Line: Use least squares regression to find the best-fit line, y = mx + b.
+Calculate the Slope: The slope m is calculated as:
+Find the Angle: Compute θ = arctan(m).
+
+Interpretation: 
+    The tangent (tan(θ)) gives the rate of change of y with respect to x.
+
+The angle θ can be useful for interpreting the steepness of the relationship.
+In some statistical visualizations, the angle of a trend line is more 
+intuitive than the slope.
+
+In circular statistics (dealing with angles), the tangent function is used to 
+transform between linear and angular representations.
+
+Summary:
+The tangent function in statistics is often used to interpret 
+the slope of a line as an angle, which can provide geometric 
+insight into the relationship between variables.
+"""
 import numpy as np
-import matplotlib.animation as animation
 
-# Setup the figure and axes for both plots (time and magnitude responses)
-fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+# Example data
+x = np.array([1, 2, 3, 4])
+y = np.array([2, 3, 5, 7])
 
-# Angle values from 0 to 360 degrees (time domain)
-theta_vals = np.linspace(0, 2 * np.pi, 200)  # Radians
+# Linear regression
+m, b = np.polyfit(x, y, 1)
 
-# Unit Circle Setup (Left Plot: Time Response)
-ax[0].set_xlim(-1.2, 1.2)
-ax[0].set_ylim(-1.2, 1.2)
-ax[0].set_aspect('equal')
-ax[0].set_title("Unit Circle (Time Response)")
+# Angle in radians and degrees
+theta = np.arctan(m)
+theta_deg = np.degrees(theta)
 
-# Plot unit circle
-circle = plt.Circle((0, 0), 1, color='blue', fill=False)
-ax[0].add_patch(circle)
-
-# Moving point on the unit circle
-point_circle, = ax[0].plot([], [], 'ro', markersize=6)
-
-# Sine line (vertical component)
-sine_line, = ax[0].plot([], [], 'g-', lw=1)
-
-# Tangent line (from the unit circle point)
-tangent_line, = ax[0].plot([], [], 'r-', lw=1)
-
-# Time-Domain Sine Plot (Right Plot: Magnitude Response)
-time_vals = np.linspace(0, 2 * np.pi, 200)  # Time-domain angle values (radians)
-sine_vals = np.sin(time_vals)  # Sine function values
-
-ax[1].set_xlim(0, 2 * np.pi)
-ax[1].set_ylim(-1.5, 1.5)
-ax[1].plot(time_vals, sine_vals, 'b', label=r'$y = \sin(\theta)$')  # Sine curve
-ax[1].set_title("Sine Function (Time Domain)")
-ax[1].set_xlabel("Angle (radians)")
-ax[1].set_ylabel("sin(x)")
-ax[1].legend()
-
-# Moving point on sine curve
-point_sine, = ax[1].plot([], [], 'ro', markersize=6)
-
-# Animation function to update both plots
-def update(frame):
-    theta = theta_vals[frame]  # Current angle in radians
-    x = np.cos(theta)
-    y = np.sin(theta)
-    
-    # Update unit circle point
-    point_circle.set_data([x], [y])
-
-    # Update sine line (vertical component of the unit circle point)
-    sine_line.set_data([0, 0], [0, y])
-
-    # Update tangent line (if within limits)
-    if np.abs(np.cos(theta)) > 1e-2:  # Avoid division by zero
-        tan_x = 1 / np.cos(theta)
-        tangent_line.set_data([x, tan_x], [y, np.tan(theta)])
-    else:
-        tangent_line.set_data([], [])  # Hide tangent line at vertical asymptotes
-
-    # Update sine function plot (time-domain response)
-    point_sine.set_data([theta], [y])
-
-    return point_circle, sine_line, tangent_line, point_sine
-
-# Create animation
-ani = animation.FuncAnimation(fig, update, frames=len(theta_vals), interval=50, blit=True)
-
-# Show the plot
-plt.tight_layout()
-plt.show()
+print(f"Slope: {m}")
+print(f"Angle (radians): {theta}")
+print(f"Angle (degrees): {theta_deg}")
