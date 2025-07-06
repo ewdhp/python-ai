@@ -1,54 +1,107 @@
+"""
+Step-by-step Linear Regression Example
+
+
+This script demonstrates linear regression 
+with a small dataset, showing each step:
+
+1. Data collection
+2. Calculating means
+3. Calculating the slope (m) and intercept (b)
+4. Building the regression line
+5. Making predictions
+6. Visualizing the result
+
+Great question! Here’s what the numerator and denominator represent 
+in the context of linear regression:
+
+Numerator
+numerator = Σ((x_i - x̄) * (y_i - ȳ))
+
+This is the sum of the products of the deviations of x and y 
+from their means. It measures how much x and y vary together (covariance).
+In the table, this is the sum of the (x-x̄)*(y-ȳ) column.
+Geometrically, it tells you if the points tend to go up together (positive),
+down together (positive), or in opposite directions (negative).
+
+Denominator
+denominator = Σ((x_i - x̄)^2)
+
+This is the sum of the squared deviations of x from its mean.
+It measures how much x varies by itself (variance of x).
+
+In the table, this is the sum of the (x-x̄)^2 column.
+
+Slope (m)
+m = numerator / denominator
+
+The slope is the ratio of how much y changes with x, normalized 
+by how much x varies.
+
+The “straight line at the middle” is the regression line, which 
+is determined by this slope and the intercept.
+Summary:
+
+- The numerator is the sum of the products of deviations (covariance).
+- The denominator is the sum of squared deviations of x (variance).
+
+Their ratio gives the slope of the best-fit line.
+
+---------------------------
+Variance measures how spread out a set of numbers is. It tells you how 
+much the values in a dataset differ from the mean (average) of the dataset.
+
+Interpretation:
+A low variance means the data points are close to the mean.
+A high variance means the data points are more spread out.
+
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Sample data: Sunlight hours and plant height
-sunlight_hours = np.array([2, 4, 6, 8, 10, 12])
-plant_height = np.array([15, 25, 40, 50, 65, 80])
+# 1. Data collection
+x = np.array([1, 2, 3, 4, 5])
+y = np.array([2, 4, 5, 4, 5])
 
-# Compute means
-X_mean = np.mean(sunlight_hours)
-Y_mean = np.mean(plant_height)
+# 2. Calculate means
+x_mean = np.mean(x)
+y_mean = np.mean(y)
+print(f"Mean of x: {x_mean}")
+print(f"Mean of y: {y_mean}")
 
-# Compute beta1 (slope)
-numerator = np.sum((sunlight_hours - X_mean) * (plant_height - Y_mean))
-denominator = np.sum((sunlight_hours - X_mean) ** 2)
-beta1 = numerator / denominator
+# 3. Calculate the slope (m) and intercept (b) manually
+print("\nTable for slope calculation:")
+print(f"{'x':>3} {'y':>3} {'x-x̄':>8} {'y-ȳ':>8} {'(x-x̄)*(y-ȳ)':>15} {'(x-x̄)^2':>10}")
+for xi, yi in zip(x, y):
+    dx = xi - x_mean
+    dy = yi - y_mean
+    prod = dx * dy
+    dx2 = dx ** 2
+    print(f"{xi:>3} {yi:>3} {dx:>8.2f} {dy:>8.2f} {prod:>15.2f} {dx2:>10.2f}")
 
-# Compute beta0 (intercept)
-beta0 = Y_mean - (beta1 * X_mean)
+numerator = np.sum((x - x_mean) * (y - y_mean))
+denominator = np.sum((x - x_mean) ** 2)
+m = numerator / denominator
+b = y_mean - m * x_mean
 
-# Predict Y values for existing sunlight hours
-Y_pred = beta0 + beta1 * sunlight_hours
+print(f"Slope (m): {m}")
+print(f"Intercept (b): {b}")
 
-# Generate 5 future predictions (next 5 sunlight hours)
-future_sunlight_hours = np.array([14, 16, 18, 20, 22])
-future_predictions = beta0 + beta1 * future_sunlight_hours
+# 4. Build the regression line
+y_pred = m * x + b
+print(f"Predicted y values: {y_pred}")
 
-# Plot data points and regression line
-plt.scatter(sunlight_hours, plant_height, color='blue', label="Observed Data", s=80)
-plt.plot(sunlight_hours, Y_pred, color='red', label="Regression Line")
+# 5. Make a prediction for a new x value
+x_new = 6
+y_new = m * x_new + b
+print(f"Prediction for x={x_new}: y={y_new}")
 
-# Plot future predictions
-plt.scatter(future_sunlight_hours, future_predictions, color='green', marker='x', s=100, label="Predicted Growth")
-
-plt.xlabel("Sunlight (hours/day)")
-plt.ylabel("Plant Height (cm)")
-plt.title("Plant Growth vs. Sunlight Exposure (With Predictions)")
+# 6. Visualize the result
+plt.scatter(x, y, color='blue', label='Data points')
+plt.plot(x, y_pred, color='red', label='Regression line')
+plt.scatter([x_new], [y_new], color='green', label=f'Prediction (x={x_new})')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Step-by-step Linear Regression')
 plt.legend()
-plt.grid(True)
-
-# Move the plot to the bottom-left corner (for Tkinter-based Matplotlib backends)
-manager = plt.get_current_fig_manager()
-try:
-    manager.window.setGeometry(0, 800, 800, 600)  # (x, y, width, height)
-except AttributeError:
-    print("Warning: This feature may not work in some environments.")
-
-# Show the plot
 plt.show()
-
-# Print predictions
-print(f"Intercept (β₀): {beta0:.2f}")
-print(f"Slope (β₁): {beta1:.2f}\n")
-for i, (x, y) in enumerate(zip(future_sunlight_hours, future_predictions), 1):
-    print(f"Prediction {i}: Sunlight {x} hours → Plant Height {y:.2f} cm")
