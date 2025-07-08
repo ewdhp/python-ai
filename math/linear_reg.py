@@ -75,17 +75,17 @@ You're essentially computing a kind of average rate of change based
 on deviations—similar in spirit to a derivative, but using finite 
 differences instead of limits
 
-
+----------------------------
 Once you’ve calculated the slope m and intercept b, 
 you can create the regression equation:
 
     𝑦^= 𝑚 ⋅ 𝑥 + 𝑏
 
 Slope:
-𝑚 = ∑( 𝑥𝑖 − 𝑥ˉ)( 𝑦𝑖 − 𝑦ˉ) / ∑( 𝑥𝑖 − 𝑥ˉ)**2
+    𝑚 = ∑( 𝑥𝑖 − 𝑥ˉ)( 𝑦𝑖 − 𝑦ˉ) / ∑( 𝑥𝑖 − 𝑥ˉ)**2
 
 intercept:
-𝑏 = 𝑦ˉ− 𝑚 ⋅ 𝑥
+    𝑏 = 𝑦ˉ− 𝑚 ⋅ 𝑥
 
 Where:
 
@@ -96,8 +96,9 @@ Where:
 import numpy as np
 import matplotlib.pyplot as plt
 
-x = np.array([1,  2, 3,  4, 5,  6,])
-y = np.array([1,  2, 3,  4, 5,  6,])
+
+x = np.arange(1,6)
+y = x
 
 # 2. Calculate means
 x_mean = np.mean(x)
@@ -109,28 +110,17 @@ denominator = np.sum((x - x_mean) ** 2)
 m = numerator / denominator
 b = y_mean - m * x_mean
 
-# 4. Build the regression line
-y_pred = m * x + b
 
-# 5. Make a prediction for a new x value
-x_new = 7
-y_new = m * x_new + b
+x_new_list = [10, 12, 15, 20]
+n = len(x_new_list)
+y_new_list = [m * x_val + b for x_val in x_new_list]
+r = np.corrcoef(x, y)[0, 1]
+
 
 print(f"Slope (m): {m:.10f}")
 print(f"Intercept (b): {b:.10f}")
-print(f"Predicted y values: {[f'{val:.10f}' for val in y_pred]}")
-print(f"Prediction for x={x_new}: y={y_new:.10f}")
+print(f"Correlation coefficient: {r:.4f}")
+for x_val, y_val in zip(x_new_list, y_new_list):
+    print(f"Prediction for x={x_val}: y={y_val:.10f}")
 
-# 6. Visualize the result
-plt.scatter(x, y, color='blue', label='Data points')
-plt.plot(x, y_pred, color='red', label='Regression line')
-plt.scatter(
-    [x_new], [y_new], 
-    color='green', 
-    label=f'Prediction (x={x_new}) y={y_new:.2f}')
 
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Step-by-step Linear Regression')
-plt.legend()
-plt.show()
