@@ -1,15 +1,13 @@
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Generate random variables
 np.random.seed(42)
-x = np.random.normal(0, 1, 1000)
-y = 2 * x + np.random.normal(0, 1, 1000)  # Correlated with x
-z = np.random.normal(0, 1, 1000)  # Independent of x
+x = np.random.normal(0, 1, 100)
+y = 2 * x + np.random.normal(0, 1, 100)  # Correlated with x
+z = np.random.normal(0, 1, 100)  # Independent of x
 
 # Calculate Pearson correlation coefficient
 correlation_xy, _ = pearsonr(x, y)
