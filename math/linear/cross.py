@@ -1,58 +1,48 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
 
-def cross_product_and_visualize(A, B):
-    # Ensure 3D vectors
-    if len(A) != 3 or len(B) != 3:
-        raise ValueError("Both vectors must be 3-dimensional.")
+# Define two 3D vectors
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
 
-    a1, a2, a3 = A
-    b1, b2, b3 = B
+# Compute the cross product
+cross = np.cross(a, b)
 
-    # Explicit cross product
-    cross_product = (
-        a2 * b3 - a3 * b2,
-        a3 * b1 - a1 * b3,
-        a1 * b2 - a2 * b1
-    )
-    area = np.linalg.norm(cross_product)
+# Create a 3D plot
+fig = go.Figure()
 
-    # Convert to numpy arrays for plotting
-    A = np.array(A)
-    B = np.array(B)
-    C = np.array(cross_product)
+# Plot vector a
+fig.add_trace(go.Scatter3d(
+    x=[0, a[0]], y=[0, a[1]], z=[0, a[2]],
+    mode='lines+markers',
+    name='a',
+    line=dict(color='blue', width=5)
+))
 
-    # Set up 3D plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    origin = np.array([0, 0, 0])
+# Plot vector b
+fig.add_trace(go.Scatter3d(
+    x=[0, b[0]], y=[0, b[1]], z=[0, b[2]],
+    mode='lines+markers',
+    name='b',
+    line=dict(color='red', width=5)
+))
 
-    # Draw vectors
-    ax.quiver(*origin, *A, color='blue', label='Vector A')
-    ax.quiver(*origin, *B, color='green', label='Vector B')
-    ax.quiver(*origin, *C, color='red', label='Cross Product (A × B)')
+# Plot cross product vector
+fig.add_trace(go.Scatter3d(
+    x=[0, cross[0]], y=[0, cross[1]], z=[0, cross[2]],
+    mode='lines+markers',
+    name='a x b',
+    line=dict(color='green', width=5)
+))
 
-    # Draw parallelogram span by A and B
-    ax.plot_trisurf(
-        [0, A[0], B[0], A[0] + B[0]],
-        [0, A[1], B[1], A[1] + B[1]],
-        [0, A[2], B[2], A[2] + B[2]],
-        color='lightgrey',
-        alpha=0.5
-    )
+# Set plot layout
+fig.update_layout(
+    scene=dict(
+        xaxis_title='X',
+        yaxis_title='Y',
+        zaxis_title='Z'
+    ),
+    title='3D Cross Product Visualization'
+)
 
-    ax.set_xlim([-10, 10])
-    ax.set_ylim([-10, 10])
-    ax.set_zlim([-10, 10])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.set_title(f"Cross Product Visualization\nArea = {area:.2f}")
-    ax.legend()
-    plt.show()
-
-# Example usage
-A = [1, 2, 3]
-B = [4, 5, 6]
-cross_product_and_visualize(A, B)
+fig.show()
