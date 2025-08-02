@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 # Define two 3D vectors
 a = np.array([1, 2, 3])
-b = np.array([4, 5, 6])
+b = np.array([2, 3, 4])
 
 # Compute the cross product
 cross = np.cross(a, b)
