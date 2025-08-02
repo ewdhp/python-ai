@@ -1,3 +1,35 @@
+
+"""
+process.py
+This script analyzes process logs to detect anomalous processes 
+based on CPU and thread usage.
+
+It performs the following steps:
+- Loads process data from a CSV file.
+- Sanitizes and normalizes numeric fields (CPU, Threads).
+- Trains an Isolation Forest model for anomaly detection.
+- Flags trusted process paths as normal (whitelisting).
+- Outputs suspicious (anomalous) processes to a separate CSV file.
+Intended for use in monitoring and identifying potentially suspicious 
+or abnormal processes on a Windows system.
+
+The Isolation Forest algorithm is used here for anomaly detection. 
+Its purpose is to identify processes whose CPU and Threads usage 
+patterns differ significantly from the majority, which may indicate 
+suspicious or abnormal behavior.
+
+Explanation:
+
+Isolation Forest is an unsupervised machine learning algorithm designed 
+to detect anomalies (outliers) in data.It works by randomly partitioning 
+the data and isolating observations. Anomalies are isolated faster because 
+they are few and different.In this code, the model is trained on normalized 
+CPU and Threads metrics for each process.Processes that the model predicts 
+as outliers are labeled as "anomaly", while the rest are labeled as "normal".
+This helps automatically flag unusual processes for further investigation.
+You can add this as a comment above the model training section:
+"""
+
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
