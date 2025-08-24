@@ -46,7 +46,9 @@ print(f"- Estimated probability of drawing one of them: {probability:.4%}")
 
 
 
+Astrónomos del Instituto Max Planck sorprendieron a la comunidad científica tras detectar lo que describen como un “túnel interestelar” que conecta nuestro sistema solar con regiones estelares lejanas. 
 
+El hallazgo, publicado en la revista Astronomy & Astrophysics, muestra que vivimos dentro de una zona compleja del espacio moldeada por antiguas supernovas.
 
 
 
