@@ -1,0 +1,9 @@
+{
+  "steps": [
+    "Collect interview",
+    "Evaluate patient",
+    "Validate concordance",
+    "Score evaluation",
+    "Export results"
+  ]
+}
