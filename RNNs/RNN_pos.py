@@ -76,6 +76,7 @@ def forward_pass_single(x, h_prev):
     y_hat = np.dot(Why, h_next) + by
     y_hat = np.exp(y_hat) / np.sum(np.exp(y_hat))
     return y_hat, h_next
+
 # Sample POS tagging for sentences (this should be replaced with a real POS tagger in production)
 def pos_tagging(sentence):
     # This is a mock POS tagger for demonstration purposes
