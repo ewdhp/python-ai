@@ -6,7 +6,7 @@ wavelength = 0.5
 k = 2 * np.pi / wavelength  # wave number
 aperture_points = 50
 aperture_width = 10
-screen_points = 200
+screen_points = 20
 screen_range = 20
 
 # 1. Geometric Huygens circles -------------------

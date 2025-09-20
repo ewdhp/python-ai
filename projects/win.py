@@ -1,6 +1,6 @@
 Here’s a solid project structure to support your Windows hardening and 
 monitoring system. This layout keeps things modular, maintainable, and 
-scalable — whether you're running it on one machine or deploying across 
+scalable — whether you're running it on one machine or deploying acros
 a fleet.
 
 ---

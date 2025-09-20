@@ -8,7 +8,7 @@ from matplotlib.animation import FuncAnimation
 A1 = 1.0      # Amplitude of wave 1
 A2 = 1.0      # Amplitude of wave 2
 lambda_ = 1.0 # Wavelength
-k = 2 * np.pi / lambda_  # Wave number
+k =  np.pi / lambda_  # Wave number
 omega = 2 * np.pi / 2.0  # Angular frequency
 
 # Spatial domain
