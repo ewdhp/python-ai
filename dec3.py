@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- Basic Setup ---
-
 ROC_radius_main = 1.0
 ROC_radius_small = ROC_radius_main / 2  # Half the main ROC radius
 theta_vals = np.linspace(0, 2 * np.pi, 400)
