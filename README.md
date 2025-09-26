@@ -1750,3 +1750,4 @@ You could also:
 * Use **quantum entropy** as a metric for coherence loss.
 
 Let me know if you'd like to add any of these or animate the decoherence.
+# bash-script
