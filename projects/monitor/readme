@@ -1,118 +1,98 @@
-Perfect — we can define a **robust CLI interface** for the orchestrator that works across terminals and supports **listing tasks, running them independently, checking status, and managing logs**. This will let you use it on different terminals and trigger tasks without modifying code.
-
----
-
-## 🔹 Proposed CLI Design
+Perfect — here’s a clear diagram showing the **orchestrator architecture with tasks, YAML config, status tracking, PID/log files, and optional scheduler queue**. I’ll annotate the components so you can see how CLI commands interact with each piece.
 
 ```
-Usage: hl-monitor <command> [options]
-
-Commands:
-
-  list
-    List all available tasks with their type (one-shot, cron, daemon) and description.
-
-  run <task_name>
-    Run a specific task in a new terminal.
-    Options:
-      --log PATH       Specify log file path (default: logs/<task_name>.log)
-      --foreground    Run in the current terminal instead of opening a new one.
-
-  status [task_name]
-    Show the status of all tasks or a specific task.
-    Options:
-      --json          Output status in JSON format for automation.
-
-  tail <task_name>
-    Tail the log of a specific task in real-time.
-    Options:
-      --lines N       Number of lines to show initially (default: 50)
-
-  enable <task_name>
-    Enable a task if previously disabled.
-
-  disable <task_name>
-    Disable a task temporarily from being executed.
-
-  help
-    Show this help message.
-```
-
----
-
-### 🔹 CLI Behavior by Command
-
-| Command              | Behavior                                                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `list`               | Reads YAML config, prints all tasks, type, description, and next scheduled run.                                          |
-| `run <task>`         | Launches the task script in a **new terminal** (or foreground), logs output.                                             |
-| `status`             | Reads per-task metadata (from orchestrator DB / JSON file) and prints live status: last run, next run, progress, alerts. |
-| `tail <task>`        | Opens `tail -f` on task’s log file for live output.                                                                      |
-| `enable` / `disable` | Updates config or DB to allow/disallow task execution.                                                                   |
-
----
-
-### 🔹 Example Commands
-
-```bash
-# List all tasks
-hl-monitor list
-
-# Run SSH login monitor in a new terminal
-hl-monitor run ssh_login_monitor
-
-# Run FIM monitor in foreground for debugging
-hl-monitor run fim_monitor --foreground
-
-# Check status of all tasks
-hl-monitor status
-
-# Check status of one task in JSON for automation
-hl-monitor status ssh_login_monitor --json
-
-# Tail logs of a task
-hl-monitor tail ssh_login_monitor --lines 100
-
-# Temporarily disable a task
-hl-monitor disable fim_monitor
-
-# Re-enable the task
-hl-monitor enable fim_monitor
+                         +---------------------+
+                         | hl_monitor_config.yaml |
+                         | (Task definitions)    |
+                         +-----------+---------+
+                                     |
+                                     v
+                         +---------------------+
+                         |   Orchestrator CLI  |
+                         |--------------------|
+                         | list / run / stop   |
+                         | pause / resume      |
+                         | restart / status    |
+                         | tail logs           |
+                         +-----------+---------+
+                                     |
+                                     v
++---------------------+        +----------------------+
+|  Task Objects (Python) |----->|   Scheduler Queue     | (optional)
+|---------------------|        | - Tracks ready tasks |
+| name, type, enabled |        | - Handles cron/daemon|
+| steps, interval     |        +----------------------+
+| runtime status      |
+| pid, progress       |
++---------+-----------+
+          |
+          v
++---------------------+       +--------------------+
+| PID Directory       |       | Logs Directory     |
+| pids/<task>.pid     |       | logs/<task>.log    |
+| - Tracks process id |       | - Captures stdout  |
+|   for stop/pause    |       |   and step output  |
+|   resume/restart    |       | - Supports tail -f |
++---------------------+       +--------------------+
+          |
+          v
++---------------------+
+| Task Process Script |
+|---------------------|
+| - Executes steps    |
+| - Updates progress  |
+| - Writes logs       |
+| - Handles signals   |
+|   (SIGTERM/SIGSTOP) |
++---------------------+
 ```
 
 ---
 
-### 🔹 Notes for Implementation
+### 🔹 Explanation
 
-1. **Independent Terminals**:
+1. **YAML Config**
 
-   * Use `subprocess.Popen` to spawn `gnome-terminal`, `konsole`, or `xterm`.
-   * For headless servers, `--foreground` runs in current terminal.
+   * Defines all tasks, their types (`one-shot`, `daemon`, `cron`), steps, schedule, and enabled/disabled state.
 
-2. **Logging**:
+2. **Orchestrator CLI**
 
-   * Default path: `logs/<task_name>.log`.
-   * Option to override with `--log`.
+   * Provides user interface to manage tasks (`run`, `stop`, `pause`, `resume`, `restart`, `status`, `tail`).
+   * Reads config and interacts with **Task objects**, **PID files**, and **logs**.
 
-3. **Status Tracking**:
+3. **Task Objects (Python)**
 
-   * Keep a **small SQLite DB or JSON file** storing:
+   * In-memory representation of tasks.
+   * Stores runtime state: `pid`, `progress`, `alerts`, `severity`.
 
-     * `last_run`, `next_run`, `status`, `progress`, `alerts`, `severity`.
-   * `status` command reads this file to show current info.
+4. **Scheduler Queue (Optional)**
 
-4. **Enable/Disable**:
+   * For daemon or cron tasks.
+   * Determines which tasks are ready to run.
+   * Works with intervals or cron expressions.
 
-   * Mark task as enabled/disabled in DB or config file.
-   * Orchestrator checks this before executing a task.
+5. **PID Directory**
 
-5. **Extensibility**:
+   * Each task writes its PID when launched.
+   * Orchestrator uses PID to send signals for `stop`, `pause`, `resume`.
 
-   * Add new commands (e.g., `cancel <task>`) without changing task scripts.
-   * Works with cron-style or daemon tasks as well.
+6. **Logs Directory**
+
+   * Each task writes stdout and step output to logs.
+   * Supports `tail -f` for real-time monitoring in separate terminals.
+
+7. **Task Process Script**
+
+   * Independent Python script executing the task steps.
+   * Updates progress in terminal (optional `rich` progress bar).
+   * Handles termination/pausing/resuming signals gracefully.
 
 ---
 
-If you want, I can **draft a Python CLI skeleton** implementing these commands, integrated with **task spawning in independent terminals**, logging, and status tracking — ready to use on multiple terminals.
+This diagram shows **how CLI commands, configuration, runtime state, logs, and optional scheduler queue all interact** while keeping tasks independent and observable in their own terminals.
+
+---
+
+If you want, I can now **update the CLI skeleton to include `stop`, `pause`, `resume`, and `restart` commands using the PID files**, fully integrating this architecture.
 
 Do you want me to do that next?
