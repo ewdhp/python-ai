@@ -1,137 +1,118 @@
-Ah! Now it’s clear — you want **per-task interactive terminals**, almost like having a mini `tmux`/`screen` session for each running task, showing:
-
-* Each step’s execution
-* Step output / logs in real-time
-* Ability to **trigger tasks independently**
-* Possibly keep them alive for daemons
-
-This changes the architecture a bit compared to a single live table. Here’s how we can approach it.
+Perfect — we can define a **robust CLI interface** for the orchestrator that works across terminals and supports **listing tasks, running them independently, checking status, and managing logs**. This will let you use it on different terminals and trigger tasks without modifying code.
 
 ---
 
-## 🔹 Approaches for Per-Task Terminals in Python
+## 🔹 Proposed CLI Design
 
-### 1. **Spawn each task in a separate terminal window**
+```
+Usage: hl-monitor <command> [options]
 
-* Use `subprocess` or `os.system` to launch a terminal emulator (like `gnome-terminal`, `xterm`, `konsole`) for each task.
-* Run a Python script inside that terminal that executes the task steps, prints outputs, and updates a progress bar.
+Commands:
 
-Example for Linux:
+  list
+    List all available tasks with their type (one-shot, cron, daemon) and description.
+
+  run <task_name>
+    Run a specific task in a new terminal.
+    Options:
+      --log PATH       Specify log file path (default: logs/<task_name>.log)
+      --foreground    Run in the current terminal instead of opening a new one.
+
+  status [task_name]
+    Show the status of all tasks or a specific task.
+    Options:
+      --json          Output status in JSON format for automation.
+
+  tail <task_name>
+    Tail the log of a specific task in real-time.
+    Options:
+      --lines N       Number of lines to show initially (default: 50)
+
+  enable <task_name>
+    Enable a task if previously disabled.
+
+  disable <task_name>
+    Disable a task temporarily from being executed.
+
+  help
+    Show this help message.
+```
+
+---
+
+### 🔹 CLI Behavior by Command
+
+| Command              | Behavior                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `list`               | Reads YAML config, prints all tasks, type, description, and next scheduled run.                                          |
+| `run <task>`         | Launches the task script in a **new terminal** (or foreground), logs output.                                             |
+| `status`             | Reads per-task metadata (from orchestrator DB / JSON file) and prints live status: last run, next run, progress, alerts. |
+| `tail <task>`        | Opens `tail -f` on task’s log file for live output.                                                                      |
+| `enable` / `disable` | Updates config or DB to allow/disallow task execution.                                                                   |
+
+---
+
+### 🔹 Example Commands
 
 ```bash
-gnome-terminal -- bash -c "python run_task.py --task ssh_login_monitor; exec bash"
+# List all tasks
+hl-monitor list
+
+# Run SSH login monitor in a new terminal
+hl-monitor run ssh_login_monitor
+
+# Run FIM monitor in foreground for debugging
+hl-monitor run fim_monitor --foreground
+
+# Check status of all tasks
+hl-monitor status
+
+# Check status of one task in JSON for automation
+hl-monitor status ssh_login_monitor --json
+
+# Tail logs of a task
+hl-monitor tail ssh_login_monitor --lines 100
+
+# Temporarily disable a task
+hl-monitor disable fim_monitor
+
+# Re-enable the task
+hl-monitor enable fim_monitor
 ```
 
-* Pros:
+---
 
-  * Each task has its **own terminal**.
-  * Easy to see logs/output in real-time.
-* Cons:
+### 🔹 Notes for Implementation
 
-  * Depends on GUI terminal emulator.
-  * Harder for headless servers.
+1. **Independent Terminals**:
+
+   * Use `subprocess.Popen` to spawn `gnome-terminal`, `konsole`, or `xterm`.
+   * For headless servers, `--foreground` runs in current terminal.
+
+2. **Logging**:
+
+   * Default path: `logs/<task_name>.log`.
+   * Option to override with `--log`.
+
+3. **Status Tracking**:
+
+   * Keep a **small SQLite DB or JSON file** storing:
+
+     * `last_run`, `next_run`, `status`, `progress`, `alerts`, `severity`.
+   * `status` command reads this file to show current info.
+
+4. **Enable/Disable**:
+
+   * Mark task as enabled/disabled in DB or config file.
+   * Orchestrator checks this before executing a task.
+
+5. **Extensibility**:
+
+   * Add new commands (e.g., `cancel <task>`) without changing task scripts.
+   * Works with cron-style or daemon tasks as well.
 
 ---
 
-### 2. **TUI (Text-based User Interface) multiplexed in a single terminal**
-
-* Use a TUI library (`urwid`, `npyscreen`, `textual`, `rich`) to create **split panes** for each task.
-* Each pane acts like a mini-terminal:
-
-  * Task name / type / status
-  * Step output streaming
-  * Progress bar
-* Pros:
-
-  * Single terminal for all tasks.
-  * Works on headless servers (SSH).
-* Cons:
-
-  * More complex to implement.
-  * Limited horizontal space for many tasks.
-
----
-
-### 3. **Per-task logging + tailing**
-
-* Each task writes output to its own log file (`/var/log/hl-monitor/<task>.log`).
-* Use a separate terminal to `tail -f` the log for live output:
-
-```bash
-tail -f /var/log/hl-monitor/ssh_login_monitor.log
-```
-
-* Pros:
-
-  * Simple, works anywhere.
-  * Can monitor many tasks simultaneously using multiple terminals.
-* Cons:
-
-  * No integrated dashboard.
-  * Tasks themselves don’t manage their own UI; you just monitor logs.
-
----
-
-### 4. **Combination (recommended for flexibility)**
-
-* **Tasks run as independent Python processes**, each logging to its own file.
-* **Optional TUI dashboard** in main orchestrator shows overall status (like a “mission control”).
-* You can open a terminal per task (or `tmux`/`screen` pane) to watch the logs in real-time.
-* **Trigger tasks independently**:
-
-  * Orchestrator exposes a CLI: `hl-monitor run <task>` → spawns the task process.
-  * Tasks update their logs and optionally send events back to orchestrator (IPC, socket, or file).
-
----
-
-### 🔹 Proposed Architecture for Independent Task Terminals
-
-```
-                 +-------------------+
-                 | Orchestrator CLI  |
-                 |  - list tasks     |
-                 |  - trigger task   |
-                 |  - show dashboard |
-                 +-------------------+
-                           │
-             +-------------+----------------+
-             │                              │
-      +------+-------+               +------+-------+
-      | ssh_login    |               | fim_monitor  |
-      | Python Task  |               | Python Task  |
-      | Logs -> file |               | Logs -> file |
-      | Prints steps |               | Prints steps |
-      +--------------+               +--------------+
-             │                              │
-     Optional: tail logs / open terminal per task
-```
-
-**Execution Flow:**
-
-1. User triggers a task (`hl-monitor run ssh_login_monitor`) from orchestrator CLI.
-2. Orchestrator spawns **independent Python process**.
-3. Task executes steps, prints to stdout (terminal), writes logs.
-4. User can open a terminal and `tail -f` the log or see a progress bar per step.
-5. Task finishes → orchestrator updates status.
-
----
-
-### 🔹 Why This is Better for Your Case
-
-* Each task is **self-contained** → independent execution, restartable.
-* Real-time visibility of **steps, outputs, and errors**.
-* Works for one-shot, cron, or daemon tasks.
-* Can be monitored in separate terminals or via a dashboard.
-* Easy to extend: add new tasks by creating new Python scripts.
-
----
-
-💡 **Next Step**
-I can draft a **Python skeleton where:**
-
-* Each task is its own script.
-* Orchestrator CLI can: list, trigger, monitor tasks.
-* Each task prints **step-by-step output with progress bars**.
-* Logs go to per-task files, so you can open a terminal per task and watch live.
+If you want, I can **draft a Python CLI skeleton** implementing these commands, integrated with **task spawning in independent terminals**, logging, and status tracking — ready to use on multiple terminals.
 
 Do you want me to do that next?
