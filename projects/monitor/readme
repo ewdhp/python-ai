@@ -1,4 +1,4 @@
-Perfect — here’s a clear diagram showing the **orchestrator architecture with tasks, YAML config, status tracking, PID/log files, and optional scheduler queue**. I’ll annotate the components so you can see how CLI commands interact with each piece.
+**orchestrator architecture with tasks, YAML config, status tracking, PID/log files, and optional scheduler queue**. I’ll annotate the components so you can see how CLI commands interact with each piece.
 
 ```
                          +---------------------+
