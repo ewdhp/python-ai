@@ -74,7 +74,7 @@ def render_digit_as_array(digit, width=28, height=28):
     """
     fig = plt.figure(figsize=(1,1), dpi=width)
     canvas = FigureCanvasAgg(fig)
-    ax = fig.add_axes([0,0,1,1])
+    ax = fig.add_axes((0,0,1,1))
     ax.set_axis_off()
     ax.text(0.5, 0.5, str(digit), fontsize=28, ha='center', va='center', weight='bold')
     canvas.draw()
